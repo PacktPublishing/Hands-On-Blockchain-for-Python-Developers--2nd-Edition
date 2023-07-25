@@ -1,0 +1,6 @@
+name: Simple Storage
+
+geth:
+  ethereum:
+    local:
+      uri: http://127.0.0.1:7545
