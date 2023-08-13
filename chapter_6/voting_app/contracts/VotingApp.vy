@@ -15,12 +15,11 @@ voterCount: public(uint256)
 chairperson: public(address)
 amountProposals: public(uint256)
 
-NUM_PROPOSALS: constant(uint256) = 3
+MAX_NUM_PROPOSALS: constant(uint256) = 3
 
 @external
 def __init__():
     self.chairperson = msg.sender
-    self.voterCount = 0
 
 @external
 def addProposal(_proposalName: String[100]):
@@ -56,8 +55,7 @@ def vote(proposal: uint256):
 def _winningProposal() -> uint256:
     winning_vote_count: uint256 = 0
     winning_proposal: uint256 = 0
-    j: uint256 = self.amountProposals
-    for i in range(NUM_PROPOSALS):
+    for i in range(MAX_NUM_PROPOSALS):
         if self.proposals[i].voteCount > winning_vote_count:
             winning_vote_count = self.proposals[i].voteCount
             winning_proposal = i
