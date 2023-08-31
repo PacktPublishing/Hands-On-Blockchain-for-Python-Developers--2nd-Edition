@@ -40,7 +40,9 @@ def test_vote(contract, deployer, accounts):
     contract.addProposal("beach", sender=deployer)
     contract.addProposal("mountain", sender=deployer)
     user = accounts[1]
+    user2 = accounts[2]
     contract.giveRightToVote(user, 1, sender=deployer)
+    contract.giveRightToVote(user2, 1, sender=deployer)
 
     assert contract.voters(user).weight == 1
     assert contract.voters(user).voted == False
@@ -49,6 +51,14 @@ def test_vote(contract, deployer, accounts):
     assert contract.voters(user).weight == 0
     assert contract.voters(user).voted == True
     assert contract.voters(user).vote == 0
+
+    assert contract.voters(user2).weight == 1
+    assert contract.voters(user2).voted == False
+    assert contract.voters(user2).vote == 0
+    contract.vote(1, sender=user2)
+    assert contract.voters(user2).weight == 0
+    assert contract.voters(user2).voted == True
+    assert contract.voters(user2).vote == 1
 
 def test_vote_fail(contract, deployer, accounts):
     contract.addProposal("beach", sender=deployer)
