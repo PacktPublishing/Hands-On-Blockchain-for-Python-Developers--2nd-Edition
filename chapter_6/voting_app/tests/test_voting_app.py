@@ -47,7 +47,9 @@ def test_vote(contract, deployer, accounts):
     assert contract.voters(user).weight == 1
     assert contract.voters(user).voted == False
     assert contract.voters(user).vote == 0
+    assert contract.proposals(0).voteCount == 0
     contract.vote(0, sender=user)
+    assert contract.proposals(0).voteCount == 1
     assert contract.voters(user).weight == 0
     assert contract.voters(user).voted == True
     assert contract.voters(user).vote == 0
@@ -55,7 +57,9 @@ def test_vote(contract, deployer, accounts):
     assert contract.voters(user2).weight == 1
     assert contract.voters(user2).voted == False
     assert contract.voters(user2).vote == 0
+    assert contract.proposals(1).voteCount == 0
     contract.vote(1, sender=user2)
+    assert contract.proposals(1).voteCount == 1
     assert contract.voters(user2).weight == 0
     assert contract.voters(user2).voted == True
     assert contract.voters(user2).vote == 1
@@ -84,4 +88,6 @@ def test_winnerName(contract, deployer, accounts):
     contract.vote(1, sender=user2)
     contract.vote(1, sender=user3)
 
+    assert contract.proposals(0).voteCount == 1
+    assert contract.proposals(1).voteCount == 2
     assert contract.winnerName() == "mountain"
