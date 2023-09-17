@@ -82,10 +82,6 @@ def _forwardWeight(delegate_with_weight_to_forward: address):
         self.voters[target].weight = 0
 
 @external
-def forwardWeight(delegate_with_weight_to_forward: address):
-    self._forwardWeight(delegate_with_weight_to_forward)
-
-@external
 def delegate(to: address):
     assert not self.voters[msg.sender].voted
     assert to != msg.sender
