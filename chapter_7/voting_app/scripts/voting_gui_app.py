@@ -28,6 +28,15 @@ class VotingWidget(QtWidgets.QWidget):
         print(f"The selected proposal is {proposal}")
         print(f"The selected index is {index}")
 
+        password = os.environ["VOTER_PASSWORD"]
+        address = os.environ["VOTING_APP_ADDRESS"]
+        voter_account = os.environ["VOTER_ACCOUNT"]
+        voter = accounts.load(voter_account)
+        voter.set_autosign(True, passphrase=password)
+
+        contract = project.VotingApp.at(address)
+        contract.vote(index-1, sender=voter)
+
 
 def main():
     voting_app_address = os.environ["VOTING_APP_ADDRESS"]
