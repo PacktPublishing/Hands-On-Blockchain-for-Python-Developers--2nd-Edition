@@ -56,9 +56,6 @@ class TransferWidget(QtWidgets.QWidget):
         self.layout.addWidget(self.address_combobox)
         self.layout.addWidget(self.transfer_button)
 
-        self.wallet_account = accounts.load(self.username)
-        self.wallet_account.set_autosign(True, passphrase=self.password)
-
         self.thread = WorkerThread()
         self.thread.update_label.connect(self.update_balance)
         self.thread.start()
@@ -75,8 +72,11 @@ class TransferWidget(QtWidgets.QWidget):
         label, address = label_address.split(" - ")
         amount = self.amount_field.toPlainText()
         amount = amount + "000000000000000000"
-        self.wallet_account.transfer(address, amount)
-        self.close()
+        wallet_account = accounts.load(self.username)
+        wallet_account.set_autosign(True, passphrase=self.password)
+        wallet_account.transfer(address, amount)
+        self.address_combobox.setCurrentIndex(0)
+        self.amount_field.setText("")
 
 
 def main():
