@@ -1,8 +1,8 @@
 import os.path, json
 import ipfshttpclient
 import cv2
+import os
 from web3 import Web3, IPCProvider
-from populus.utils.wait import wait_for_transaction_receipt
 from decentralized_videos.settings import STATICFILES_DIRS, STATIC_URL, BASE_DIR, MEDIA_ROOT
 
 
@@ -10,12 +10,11 @@ class VideosSharing:
 
     def __init__(self):
         self.w3 = Web3(IPCProvider('/tmp/geth.ipc'))
-        with open('../address.txt', 'r') as f:
-            address = f.read().rstrip("\n")
+        address = os.environ["VIDEO_SHARING_ADDRESS"]
 
-        with open('../videos_sharing_smart_contract/build/contracts.json') as f:
+        with open('../videos_sharing_smart_contract/.build/VideoSharing.json') as f:
             contract = json.load(f)
-            abi = contract['VideosSharing']['abi']
+            abi = contract['abi']
 
         self.SmartContract = self.w3.eth.contract(address=address, abi=abi)
 
@@ -104,7 +103,6 @@ class VideosSharing:
                     'nonce': nonce
                   })
         txn_hash = self.w3.personal.sendTransaction(txn, password)
-        wait_for_transaction_receipt(self.w3, txn_hash)
 
     def process_thumbnail(self, ipfs_path):
         thumbnail_file = STATICFILES_DIRS[0] + '/' + ipfs_path + '.png'
@@ -126,7 +124,6 @@ class VideosSharing:
                     'nonce': nonce
                   })
         txn_hash = self.w3.personal.sendTransaction(txn, password)
-        wait_for_transaction_receipt(self.w3, txn_hash)
 
 
 videos_sharing = VideosSharing()
