@@ -1,5 +1,5 @@
 import os.path, json
-import ipfsapi
+import ipfshttpclient
 import cv2
 from web3 import Web3, IPCProvider
 from populus.utils.wait import wait_for_transaction_receipt
@@ -19,7 +19,7 @@ class VideosSharing:
 
         self.SmartContract = self.w3.eth.contract(address=address, abi=abi)
 
-        self.ipfs_con = ipfsapi.connect()
+        self.ipfs_con = ipfshttpclient.connect()
 
     def recent_videos(self, amount=20):
         events = self.SmartContract.events.UploadVideo.createFilter(fromBlock=0).get_all_entries()
