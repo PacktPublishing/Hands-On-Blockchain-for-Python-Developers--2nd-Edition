@@ -2,31 +2,39 @@ import os.path, json
 import ipfshttpclient
 import cv2
 import os
+from ape import accounts, Contract, project
+from ape import networks
+from ethpm_types import ContractType
+from ape_ethereum.transactions import Receipt
 from web3 import Web3, IPCProvider
 from decentralized_videos.settings import STATICFILES_DIRS, STATIC_URL, BASE_DIR, MEDIA_ROOT
 
+BLOCKCHAIN_NETWORK = "local"
+BLOCKCHAIN_PROVIDER = "geth"
 
 class VideosSharing:
 
     def __init__(self):
         self.w3 = Web3(IPCProvider('/tmp/geth.ipc'))
-        self.address = os.environ["VIDEO_SHARING_ADDRESS"]
+        self.address = Web3.to_checksum_address(os.environ["VIDEO_SHARING_ADDRESS"])
 
         with open('../videos_sharing_smart_contract/.build/VideoSharing.json') as f:
             contract = json.load(f)
-            abi = contract['abi']
-
-        self.SmartContract = self.w3.eth.contract(address=self.address, abi=abi)
+            self.abi = contract['abi']
 
         self.ipfs_con = ipfshttpclient.connect()
 
     def recent_videos(self, amount=20):
-        events = self.SmartContract.events.UploadVideo().get_logs(fromBlock=0)
+        with networks.ethereum[BLOCKCHAIN_NETWORK].use_provider(BLOCKCHAIN_PROVIDER):
+            ct = ContractType.parse_obj({"abi": self.abi})
+            self.SmartContract = Contract(self.address, ct)
+            events = self.SmartContract.UploadVideo.query("*", start_block=0)
+
         videos = []
-        for event in events:
+        for event in events["event_arguments"]:
             video = {}
-            video['user'] = event['args']['_user']
-            video['index'] = event['args']['_index']
+            video['user'] = event['_user']
+            video['index'] = event['_index']
             video['path'] = self.get_video_path(video['user'], video['index'])
             video['title'] = self.get_video_title(video['user'], video['index'])
             video['thumbnail'] = self.get_video_thumbnail(video['path'])
@@ -35,7 +43,10 @@ class VideosSharing:
         return videos[:amount]
 
     def get_videos(self, user, amount=20):
-        latest_index = self.SmartContract.functions.latest_videos_index(user).call()
+        with networks.ethereum[BLOCKCHAIN_NETWORK].use_provider(BLOCKCHAIN_PROVIDER):
+            ct = ContractType.parse_obj({"abi": self.abi})
+            self.SmartContract = Contract(self.address, ct)
+            latest_index = self.SmartContract.latest_videos_index(user)
         i = 0
         videos = []
         while i < amount and i < latest_index:
@@ -51,10 +62,16 @@ class VideosSharing:
         return videos
 
     def get_video_path(self, user, index):
-        return self.SmartContract.functions.videos_path(user, index).call()
+        with networks.ethereum[BLOCKCHAIN_NETWORK].use_provider(BLOCKCHAIN_PROVIDER):
+            ct = ContractType.parse_obj({"abi": self.abi})
+            self.SmartContract = Contract(self.address, ct)
+            return self.SmartContract.videos_path(user, index)
 
     def get_video_title(self, user, index):
-        return self.SmartContract.functions.videos_title(user, index).call()
+        with networks.ethereum[BLOCKCHAIN_NETWORK].use_provider(BLOCKCHAIN_PROVIDER):
+            ct = ContractType.parse_obj({"abi": self.abi})
+            self.SmartContract = Contract(self.address, ct)
+            return self.SmartContract.videos_title(user, index)
 
     def get_video_thumbnail(self, ipfs_path):
         thumbnail_file = str(STATICFILES_DIRS[0]) + '/' + ipfs_path + '.png'
@@ -75,7 +92,10 @@ class VideosSharing:
         video['title'] = video_title
         video['user'] = user
         video['index'] = index
-        video['aggregate_likes'] = self.SmartContract.functions.video_aggregate_likes(user, index).call()
+        with networks.ethereum[BLOCKCHAIN_NETWORK].use_provider(BLOCKCHAIN_PROVIDER):
+            ct = ContractType.parse_obj({"abi": self.abi})
+            self.SmartContract = Contract(self.address, ct)
+            video['aggregate_likes'] = self.SmartContract.video_aggregate_likes(user, index)
 
         if os.path.isfile(video_file):
             video['url'] = STATIC_URL + '/' + ipfs_path + '.mp4'
@@ -98,7 +118,7 @@ class VideosSharing:
         ipfs_path = ipfs_add['Hash'].encode('utf-8')
         title = title[:20].encode('utf-8')
         nonce = self.w3.eth.getTransactionCount(Web3.toChecksumAddress(video_user))
-        txn = self.SmartContract.functions.upload_video(ipfs_path, title).buildTransaction({
+        txn = self.SmartContract.upload_video(ipfs_path, title).buildTransaction({
                     'from': video_user,
                     'gas': 200000,
                     'gasPrice': self.w3.toWei('30', 'gwei'),
@@ -116,10 +136,10 @@ class VideosSharing:
             cv2.imwrite(thumbnail_file, frame)
 
     def like_video(self, video_liker, password, video_user, index):
-        if self.SmartContract.functions.video_has_been_liked(video_liker, video_user, index).call():
+        if self.SmartContract.video_has_been_liked(video_liker, video_user, index):
             return
         nonce = self.w3.eth.getTransactionCount(Web3.toChecksumAddress(video_liker))
-        txn = self.SmartContract.functions.like_video(video_user, index).buildTransaction({
+        txn = self.SmartContract.like_video(video_user, index).buildTransaction({
                     'from': video_liker,
                     'gas': 200000,
                     'gasPrice': self.w3.toWei('30', 'gwei'),
