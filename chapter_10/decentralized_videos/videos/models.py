@@ -117,16 +117,14 @@ class VideosSharing:
             cv2.imwrite(thumbnail_file, frame)
 
     def like_video(self, video_liker, password, video_user, index):
-        if self.SmartContract.video_has_been_liked(video_liker, video_user, index):
-            return
-        nonce = self.w3.eth.getTransactionCount(Web3.toChecksumAddress(video_liker))
-        txn = self.SmartContract.like_video(video_user, index).buildTransaction({
-                    'from': video_liker,
-                    'gas': 200000,
-                    'gasPrice': self.w3.toWei('30', 'gwei'),
-                    'nonce': nonce
-                  })
-        txn_hash = self.w3.personal.sendTransaction(txn, password)
+        with networks.ethereum[BLOCKCHAIN_NETWORK].use_provider(BLOCKCHAIN_PROVIDER):
+            ct = ContractType.parse_obj({"abi": self.abi})
+            self.SmartContract = Contract(self.address, ct)
+            sender = accounts.load(video_liker)
+            if self.SmartContract.video_has_been_liked(sender.address, video_user, index):
+                return
+            sender.set_autosign(True, passphrase=password)
+            self.SmartContract.like_video(video_user, index, sender=sender)
 
 
 videos_sharing = VideosSharing()
