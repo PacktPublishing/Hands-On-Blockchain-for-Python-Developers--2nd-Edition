@@ -10,18 +10,18 @@ class VideosSharing:
 
     def __init__(self):
         self.w3 = Web3(IPCProvider('/tmp/geth.ipc'))
-        address = os.environ["VIDEO_SHARING_ADDRESS"]
+        self.address = os.environ["VIDEO_SHARING_ADDRESS"]
 
         with open('../videos_sharing_smart_contract/.build/VideoSharing.json') as f:
             contract = json.load(f)
             abi = contract['abi']
 
-        self.SmartContract = self.w3.eth.contract(address=address, abi=abi)
+        self.SmartContract = self.w3.eth.contract(address=self.address, abi=abi)
 
         self.ipfs_con = ipfshttpclient.connect()
 
     def recent_videos(self, amount=20):
-        events = self.SmartContract.events.UploadVideo.createFilter(fromBlock=0).get_all_entries()
+        events = self.SmartContract.events.UploadVideo().get_logs(fromBlock=0)
         videos = []
         for event in events:
             video = {}
@@ -51,14 +51,16 @@ class VideosSharing:
         return videos
 
     def get_video_path(self, user, index):
-        return self.SmartContract.functions.videos_path(user, index).call().decode('utf-8')
+        return self.SmartContract.functions.videos_path(user, index).call()
 
     def get_video_title(self, user, index):
-        return self.SmartContract.functions.videos_title(user, index).call().decode('utf-8')
+        return self.SmartContract.functions.videos_title(user, index).call()
 
     def get_video_thumbnail(self, ipfs_path):
-        thumbnail_file = STATICFILES_DIRS[0] + '/' + ipfs_path + '.png'
+        thumbnail_file = str(STATICFILES_DIRS[0]) + '/' + ipfs_path + '.png'
         url_file = STATIC_URL + '/' + ipfs_path + '.png'
+        print(thumbnail_file)
+
         if os.path.isfile(thumbnail_file):
             return url_file
         else:
@@ -68,8 +70,8 @@ class VideosSharing:
         video = {}
         ipfs_path = self.get_video_path(user, index)
         video_title = self.get_video_title(user, index)
-        video_file = STATICFILES_DIRS[0] + '/' + ipfs_path + '.mp4'
-        thumbnail_file = STATICFILES_DIRS[0] + '/' + ipfs_path + '.png'
+        video_file = str(STATICFILES_DIRS[0]) + '/' + ipfs_path + '.mp4'
+        thumbnail_file = str(STATICFILES_DIRS[0]) + '/' + ipfs_path + '.png'
         video['title'] = video_title
         video['user'] = user
         video['index'] = index
@@ -79,7 +81,7 @@ class VideosSharing:
             video['url'] = STATIC_URL + '/' + ipfs_path + '.mp4'
         else:
             self.ipfs_con.get(ipfs_path)
-            os.rename(BASE_DIR + '/' + ipfs_path, STATICFILES_DIRS[0] + '/' + ipfs_path + '.mp4')
+            os.rename(str(BASE_DIR) + '/' + ipfs_path, str(STATICFILES_DIRS[0]) + '/' + ipfs_path + '.mp4')
             video['url'] = STATIC_URL + '/' + ipfs_path + '.mp4'
 
         if not os.path.isfile(thumbnail_file):
@@ -105,9 +107,9 @@ class VideosSharing:
         txn_hash = self.w3.personal.sendTransaction(txn, password)
 
     def process_thumbnail(self, ipfs_path):
-        thumbnail_file = STATICFILES_DIRS[0] + '/' + ipfs_path + '.png'
+        thumbnail_file = str(STATICFILES_DIRS[0]) + '/' + ipfs_path + '.png'
         if not os.path.isfile(thumbnail_file):
-            video_path = STATICFILES_DIRS[0] + '/' + ipfs_path + '.mp4'
+            video_path = str(STATICFILES_DIRS[0]) + '/' + ipfs_path + '.mp4'
             cap = cv2.VideoCapture(video_path)
             cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
             _, frame = cap.read()
