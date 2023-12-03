@@ -7,11 +7,6 @@ def index(request):
     context = {'videos': videos}
     return render(request, 'videos/index.html', context)
 
-def channel(request, video_user):
-    videos = videos_sharing.get_videos(video_user)
-    context = {'videos': videos, 'video_user': video_user}
-    return render(request, 'videos/channel.html', context)
-
 def video(request, video_user, index):
     video = videos_sharing.get_video(video_user, index)
     context = {'video': video}

@@ -42,25 +42,6 @@ class VideosSharing:
         videos.reverse()
         return videos[:amount]
 
-    def get_videos(self, user, amount=20):
-        with networks.ethereum[BLOCKCHAIN_NETWORK].use_provider(BLOCKCHAIN_PROVIDER):
-            ct = ContractType.parse_obj({"abi": self.abi})
-            self.SmartContract = Contract(self.address, ct)
-            latest_index = self.SmartContract.latest_videos_index(user)
-        i = 0
-        videos = []
-        while i < amount and i < latest_index:
-            video = {}
-            index = latest_index - i - 1
-            video['user'] = user
-            video['index'] = index
-            video['path'] = self.get_video_path(user, index)
-            video['title'] = self.get_video_title(user, index)
-            video['thumbnail'] = self.get_video_thumbnail(video['path'])
-            videos.append(video)
-            i += 1
-        return videos
-
     def get_video_path(self, user, index):
         with networks.ethereum[BLOCKCHAIN_NETWORK].use_provider(BLOCKCHAIN_PROVIDER):
             ct = ContractType.parse_obj({"abi": self.abi})
