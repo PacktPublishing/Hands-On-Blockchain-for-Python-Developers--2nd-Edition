@@ -161,3 +161,4 @@ cython_debug/
 #
 chapter_10/stock_videos/
 chapter_10/decentralized_videos/static
+chapter_10/decentralized_videos/media

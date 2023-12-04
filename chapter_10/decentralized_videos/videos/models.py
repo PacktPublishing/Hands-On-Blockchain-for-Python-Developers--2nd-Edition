@@ -91,21 +91,19 @@ class VideosSharing:
         return video
 
     def upload_video(self, video_user, password, video_file, title):
-        video_path = MEDIA_ROOT + '/video.mp4'
+        video_path = str(MEDIA_ROOT) + '/video.mp4'
         with open(video_path, 'wb+') as destination:
             for chunk in video_file.chunks():
                 destination.write(chunk)
         ipfs_add = self.ipfs_con.add(video_path)
-        ipfs_path = ipfs_add['Hash'].encode('utf-8')
-        title = title[:20].encode('utf-8')
-        nonce = self.w3.eth.getTransactionCount(Web3.toChecksumAddress(video_user))
-        txn = self.SmartContract.upload_video(ipfs_path, title).buildTransaction({
-                    'from': video_user,
-                    'gas': 200000,
-                    'gasPrice': self.w3.toWei('30', 'gwei'),
-                    'nonce': nonce
-                  })
-        txn_hash = self.w3.personal.sendTransaction(txn, password)
+        ipfs_path = ipfs_add['Hash']
+        title = title[:19]
+        with networks.ethereum[BLOCKCHAIN_NETWORK].use_provider(BLOCKCHAIN_PROVIDER):
+            ct = ContractType.parse_obj({"abi": self.abi})
+            self.SmartContract = Contract(self.address, ct)
+            sender = accounts.load(video_user)
+            sender.set_autosign(True, passphrase=password)
+            self.SmartContract.upload_video(ipfs_path, title, sender=sender)
 
     def process_thumbnail(self, ipfs_path):
         thumbnail_file = str(STATICFILES_DIRS[0]) + '/' + ipfs_path + '.png'
