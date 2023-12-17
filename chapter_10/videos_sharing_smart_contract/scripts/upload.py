@@ -8,7 +8,8 @@ def main():
 
     address = os.environ["VIDEO_SHARING_ADDRESS"]
     password = os.environ["VIDEO_ACCOUNT_PASSWORD"]
-    deployer = accounts.load("video")
+    account = os.environ["VIDEO_ACCOUNT"]
+    deployer = accounts.load(account)
     deployer.set_autosign(True, passphrase=password)
     contract = project.VideoSharing.at(address)
 
