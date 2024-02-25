@@ -29,7 +29,6 @@ allowance: public(HashMap[address, HashMap[address, uint256]])
 totalSupply: public(uint256)
 
 ethBalances: public(HashMap[address, uint256])
-allowed: public(HashMap[address, HashMap[address, uint256]])
 
 beneficiary: public(address)
 minFundingGoal: public(uint256)
