@@ -58,7 +58,8 @@ SUPPORTED_INTERFACES: constant(bytes4[2]) = [
 def __init__():
     self.minter = msg.sender
     self.baseURL = "https://packtpub.com/metadata/"
-
+    self.name = "Hello NFT"
+    self.symbol = "HEL"
 
 @view
 @external
