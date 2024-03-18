@@ -1,7 +1,7 @@
 from ape.exceptions import ContractLogicError
 import pytest
 
-def test_balanceOf(erc721_contract, deployer):
+def test_init(erc721_contract, deployer):
     assert "Hello NFT" == erc721_contract.name()
     assert "HEL" == erc721_contract.symbol()
 
