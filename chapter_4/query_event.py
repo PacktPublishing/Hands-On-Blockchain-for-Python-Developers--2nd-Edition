@@ -8,8 +8,7 @@ w3 = Web3(Web3.IPCProvider('/tmp/geth.ipc'))
 address = "0x8bb44f25E5b25ac14c8A9f5BFAcdFd1a700bA18B"
 contract = w3.eth.contract(address=address, abi=abi)
 
-params = {"fromBlock": 0}
-logs = contract.events.Donation().get_logs(params)
+logs = contract.events.Donation().get_logs(fromBlock: 0)
 
 for log in logs:
     print(f"The donatur address is {log.args.donatur}")
