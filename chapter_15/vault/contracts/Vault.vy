@@ -14,8 +14,8 @@ totalSupply: public(uint256)
 balanceOf: public(HashMap[address, uint256])
 allowance: public(HashMap[address, HashMap[address, uint256]])
 
-NAME: constant(String[10]) = "Hello Vault"
-SYMBOL: constant(String[5]) = "vHELLO"
+NAME: constant(String[11]) = "Hello Vault"
+SYMBOL: constant(String[6]) = "vHELLO"
 DECIMALS: constant(uint8) = 18
 
 event Transfer:
@@ -53,13 +53,13 @@ def __init__(asset: ERC20):
 
 @view
 @external
-def name() -> String[10]:
+def name() -> String[11]:
     return NAME
 
 
 @view
 @external
-def symbol() -> String[5]:
+def symbol() -> String[6]:
     return SYMBOL
 
 
@@ -106,8 +106,6 @@ def _convertToAssets(shareAmount: uint256) -> uint256:
     if totalSupply == 0:
         return 0
 
-    # NOTE: `shareAmount = 0` is extremely rare case, not optimizing for it
-    # NOTE: `totalAssets = 0` is extremely rare case, not optimizing for it
     return shareAmount * self.asset.balanceOf(self) / totalSupply
 
 
@@ -125,7 +123,6 @@ def _convertToShares(assetAmount: uint256) -> uint256:
     if totalAssets == 0 or totalSupply == 0:
         return assetAmount  # 1:1 price
 
-    # NOTE: `assetAmount = 0` is extremely rare case, not optimizing for it
     return assetAmount * totalSupply / totalAssets
 
 
