@@ -18,6 +18,7 @@ collateral: public(uint256)
 borrower: public(address)
 loan_taken: public(bool)
 interest: public(uint256)
+owner: public(address)
 
 @external
 def __init__(_borrower: address,
@@ -30,10 +31,12 @@ def __init__(_borrower: address,
     self.collateral = _collateral
     self.borrower = _borrower
     self.interest = _interest
+    self.owner = msg.sender
 
 @external
 @payable
 def borrow():
+    assert msg.sender == self.borrower, "Only the borrower can borrow the asset"
     assert msg.value == self.collateral, "Collateral is not enough"
     ERC20_Interface(self.token).transfer(msg.sender, self.loan_amount)
     self.loan_taken = True
@@ -54,3 +57,9 @@ def repay():
     self.loan_taken = False
 
     log Repay(msg.sender, self.loan_amount)
+
+@external
+def withdraw_eth():
+    assert msg.sender == self.owner, "Only the owner can withdraw ETH"
+    assert self.loan_taken == False, "Cannot withdraw while loan is active"
+    send(msg.sender, self.balance)
