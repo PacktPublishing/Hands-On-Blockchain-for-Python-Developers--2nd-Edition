@@ -1,5 +1,6 @@
 import os.path, json
-import ipfshttpclient
+import asyncio
+import aioipfs
 import cv2
 import os
 from ape import accounts, Contract, project
@@ -12,6 +13,22 @@ from decentralized_videos.settings import STATICFILES_DIRS, STATIC_URL, BASE_DIR
 BLOCKCHAIN_NETWORK = "local"
 BLOCKCHAIN_PROVIDER = "geth"
 
+async def get(ipfs_path, download_path):
+    client = aioipfs.AsyncIPFS()
+
+    await client.get(ipfs_path, dstdir=download_path)
+    await client.close()
+
+async def add(file_path):
+    client = aioipfs.AsyncIPFS()
+
+    files = [file_path]
+    hash = None
+    async for added_file in client.add(files):
+        hash = added_file['Hash']
+    await client.close()
+    return hash
+
 class VideosSharing:
 
     def __init__(self):
@@ -21,8 +38,6 @@ class VideosSharing:
         with open('../videos_sharing_smart_contract/.build/VideoSharing.json') as f:
             contract = json.load(f)
             self.abi = contract['abi']
-
-        self.ipfs_con = ipfshttpclient.connect()
 
     def recent_videos(self, amount=20):
         with networks.ethereum[BLOCKCHAIN_NETWORK].use_provider(BLOCKCHAIN_PROVIDER):
@@ -81,8 +96,8 @@ class VideosSharing:
         if os.path.isfile(video_file):
             video['url'] = STATIC_URL + '/' + ipfs_path + '.mp4'
         else:
-            self.ipfs_con.get(ipfs_path)
-            os.rename(str(BASE_DIR) + '/' + ipfs_path, str(STATICFILES_DIRS[0]) + '/' + ipfs_path + '.mp4')
+            loop = asyncio.get_event_loop()
+            loop.run_until_complete(get(ipfs_path, get(str(BASE_DIR))))
             video['url'] = STATIC_URL + '/' + ipfs_path + '.mp4'
 
         if not os.path.isfile(thumbnail_file):
@@ -95,8 +110,8 @@ class VideosSharing:
         with open(video_path, 'wb+') as destination:
             for chunk in video_file.chunks():
                 destination.write(chunk)
-        ipfs_add = self.ipfs_con.add(video_path)
-        ipfs_path = ipfs_add['Hash']
+        loop = asyncio.get_event_loop()
+        ipfs_path = loop.run_until_complete(add(video_path))
         title = title[:19]
         with networks.ethereum[BLOCKCHAIN_NETWORK].use_provider(BLOCKCHAIN_PROVIDER):
             ct = ContractType.parse_obj({"abi": self.abi})

@@ -1,10 +1,19 @@
 from ape import accounts, project
-import ipfshttpclient
+import aioipfs
+import asyncio
 import os
 
+async def add(file_path):
+    client = aioipfs.AsyncIPFS()
+
+    files = [file_path]
+    hash = None
+    async for added_file in client.add(files):
+        hash = added_file['Hash']
+    await client.close()
+    return hash
 
 def main():
-    c = ipfshttpclient.connect()
 
     address = os.environ["VIDEO_SHARING_ADDRESS"]
     password = os.environ["VIDEO_ACCOUNT_PASSWORD"]
@@ -17,6 +26,7 @@ def main():
     movies = os.listdir(directory)
     for index, movie in enumerate(movies):
         ipfs_add = c.add(directory + '/' + movie)
-        ipfs_path = ipfs_add['Hash']
+        loop = asyncio.get_event_loop()
+        ipfs_path = loop.run_until_complete(add(ipfs_add))
         title = movie.rstrip('.mp4')[:19]
         contract.upload_video(ipfs_path, title, sender=deployer)
