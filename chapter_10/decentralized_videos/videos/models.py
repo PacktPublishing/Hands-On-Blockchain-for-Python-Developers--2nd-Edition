@@ -13,6 +13,9 @@ from decentralized_videos.settings import STATICFILES_DIRS, STATIC_URL, BASE_DIR
 BLOCKCHAIN_NETWORK = "local"
 BLOCKCHAIN_PROVIDER = "geth"
 
+loop = asyncio.new_event_loop()
+asyncio.set_event_loop(loop)
+
 async def get(ipfs_path, download_path):
     client = aioipfs.AsyncIPFS()
 
@@ -96,9 +99,9 @@ class VideosSharing:
         if os.path.isfile(video_file):
             video['url'] = STATIC_URL + '/' + ipfs_path + '.mp4'
         else:
-            loop = asyncio.get_event_loop()
-            loop.run_until_complete(get(ipfs_path, get(str(BASE_DIR))))
+            loop.run_until_complete(get(ipfs_path, str(BASE_DIR)))
             video['url'] = STATIC_URL + '/' + ipfs_path + '.mp4'
+            os.rename(str(BASE_DIR) + '/' + ipfs_path, str(STATICFILES_DIRS[0]) + '/' + ipfs_path + '.mp4')
 
         if not os.path.isfile(thumbnail_file):
             self.process_thumbnail(ipfs_path)
@@ -110,7 +113,6 @@ class VideosSharing:
         with open(video_path, 'wb+') as destination:
             for chunk in video_file.chunks():
                 destination.write(chunk)
-        loop = asyncio.get_event_loop()
         ipfs_path = loop.run_until_complete(add(video_path))
         title = title[:19]
         with networks.ethereum[BLOCKCHAIN_NETWORK].use_provider(BLOCKCHAIN_PROVIDER):

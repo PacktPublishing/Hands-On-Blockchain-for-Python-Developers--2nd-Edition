@@ -25,8 +25,8 @@ def main():
     directory = '../stock_videos'
     movies = os.listdir(directory)
     for index, movie in enumerate(movies):
-        ipfs_add = c.add(directory + '/' + movie)
+        movie_path = directory + '/' + movie
         loop = asyncio.get_event_loop()
-        ipfs_path = loop.run_until_complete(add(ipfs_add))
+        ipfs_path = loop.run_until_complete(add(movie_path))
         title = movie.rstrip('.mp4')[:19]
         contract.upload_video(ipfs_path, title, sender=deployer)
