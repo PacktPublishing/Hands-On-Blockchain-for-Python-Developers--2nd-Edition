@@ -1,6 +1,5 @@
-# @version ^0.3.0
-# @dev Implementation of Uniswap V1 part 1.
-# @author Arjuna Sky Kok (@arjunaskykok)
+#pragma version ^0.3.0
+
 # Based on https://jeiwan.net/posts/programming-defi-uniswap-1/
 
 
