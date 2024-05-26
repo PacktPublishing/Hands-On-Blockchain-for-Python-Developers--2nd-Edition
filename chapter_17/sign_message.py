@@ -8,10 +8,10 @@ account = accounts.load(username)
 password = os.environ["MY_PASSWORD"]
 account.set_autosign(True, passphrase=password)
 
-message = encode_defunct(text="Hello Apes!")
+message = encode_defunct(text="Hello PacktPub!")
 signature = account.sign_message(message)
-print(signature)
+print(f"The address that creates the signature: {account.address}")
+print(f"Signature: {signature}")
 
 recovered_signer = recover_signer(message, signature)
-print(account.address)
-print(recovered_signer)
+print(f"The address that comes from the signature: {recovered_signer}")
