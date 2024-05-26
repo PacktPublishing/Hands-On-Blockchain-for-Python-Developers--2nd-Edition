@@ -6,22 +6,18 @@ import secrets
 import os
 from typing import Union
 
-from ape import accounts, Contract, project
+from ape import Contract
 from ape import networks
 from ethpm_types import ContractType
 
-from fastapi import Depends, FastAPI, HTTPException, status, Form, Response, Cookie
-from fastapi.responses import JSONResponse
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer
 from fastapi.middleware.cors import CORSMiddleware
 from jose import JWTError, jwt
-from passlib.context import CryptContext
 from pydantic import BaseModel
 from typing_extensions import Annotated
 from siwe import SiweMessage
 import siwe
-
-sessions = {}
 
 # to get a string like this run:
 # openssl rand -hex 32
