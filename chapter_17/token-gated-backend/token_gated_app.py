@@ -13,7 +13,7 @@ from ethpm_types import ContractType
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from fastapi.middleware.cors import CORSMiddleware
-from jose import JWTError, jwt
+import jwt
 from pydantic import BaseModel
 from typing_extensions import Annotated
 from siwe import SiweMessage
@@ -132,7 +132,7 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
         address: str = payload.get("sub")
         if address is None:
             raise credentials_exception
-    except JWTError:
+    except jwt.exceptions.InvalidSignatureError:
         raise credentials_exception
     exists = address in nonces_data
     if not exists:
